@@ -119,7 +119,7 @@ if (rex_addon::get('cronjob')->isAvailable()) {
     // HashRemoveCronjob - Alte Einträge in der Hash-Tabelle entfernen
     $sql->setQuery("SELECT id FROM " . rex::getTable('cronjob') . " WHERE type = 'rex_statistics_hashremove_cronjob' LIMIT 1");
     if ($sql->getRows() === 0) {
-        $cronjob = rex_cronjob::factory('rex_statistics_hashremove_cronjob');
+        $cronjob = new rex_statistics_hashremove_cronjob();
         $cronjob->setName('REDAXO Statistics - Hash Cleanup');
         $cronjob->setDescription('Entfernt alte Hash-Einträge aus der Datenbank');
         $cronjob->setEnvironments([rex_cronjob::BACKEND, rex_cronjob::FRONTEND]);
@@ -133,7 +133,7 @@ if (rex_addon::get('cronjob')->isAvailable()) {
     // DataCleanupCronjob - Alte Statistik-Daten zusammenfassen und bereinigen
     $sql->setQuery("SELECT id FROM " . rex::getTable('cronjob') . " WHERE type = 'rex_statistics_datacleanup_cronjob' LIMIT 1");
     if ($sql->getRows() === 0) {
-        $cronjob = rex_cronjob::factory('rex_statistics_datacleanup_cronjob');
+        $cronjob = new rex_statistics_datacleanup_cronjob();
         $cronjob->setName('REDAXO Statistics - Datenbank-Optimierung');
         $cronjob->setDescription('Optimiert die Datenbank durch Aggregation alter Statistikdaten');
         $cronjob->setEnvironments([rex_cronjob::BACKEND, rex_cronjob::FRONTEND]);
