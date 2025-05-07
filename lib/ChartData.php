@@ -36,8 +36,8 @@ class chartData
         $this->addon = rex_addon::get('statistics');
         
         // Cache-Lebensdauer kann in den Einstellungen konfiguriert werden
-        $this->cache_lifetime = $this->addon->getConfig('statistics_cache_lifetime', $this->cache_lifetime);
-        $this->use_cache = $this->addon->getConfig('statistics_use_cache', true);
+        $this->cache_lifetime = (int)$this->addon->getConfig('statistics_cache_lifetime', $this->cache_lifetime);
+        $this->use_cache = (bool)$this->addon->getConfig('statistics_use_cache', true);
     }
     
     /**
