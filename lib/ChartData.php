@@ -11,14 +11,17 @@ use rex;
 use rex_addon;
 use rex_sql;
 use rex_sql_exception;
+use rex_config; // Für die Cache-Konfiguration
+use rex_path; // Für Cache-Dateipfade
 
 class chartData
 {
 
     private DateFilter $filter_date_helper;
     private rex_addon $addon;
-
-
+    private static $cache = [];
+    private $cache_lifetime = 3600; // 1 Stunde Cache-Lebensdauer
+    private $use_cache = true;
 
     /**
      * 
@@ -31,8 +34,84 @@ class chartData
     {
         $this->filter_date_helper = $filter_date_helper;
         $this->addon = rex_addon::get('statistics');
+        
+        // Cache-Lebensdauer kann in den Einstellungen konfiguriert werden
+        $this->cache_lifetime = $this->addon->getConfig('statistics_cache_lifetime', $this->cache_lifetime);
+        $this->use_cache = $this->addon->getConfig('statistics_use_cache', true);
     }
-
+    
+    /**
+     * Versucht Daten aus dem Cache zu lesen
+     * 
+     * @param string $key Cache-Schlüssel
+     * @return mixed|null Cached data oder null wenn nicht gefunden/abgelaufen
+     */
+    private function getFromCache($key) 
+    {
+        if (!$this->use_cache) {
+            return null;
+        }
+        
+        $cache_file = $this->getCacheFilePath($key);
+        
+        if (file_exists($cache_file)) {
+            $cache_data = unserialize(file_get_contents($cache_file));
+            
+            // Prüfe, ob Cache noch gültig ist
+            if ($cache_data['timestamp'] > time() - $this->cache_lifetime) {
+                return $cache_data['data'];
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Speichert Daten im Cache
+     * 
+     * @param string $key Cache-Schlüssel
+     * @param mixed $data zu speichernde Daten
+     */
+    private function saveToCache($key, $data) 
+    {
+        if (!$this->use_cache) {
+            return;
+        }
+        
+        $cache_file = $this->getCacheFilePath($key);
+        
+        // Stelle sicher, dass das Cache-Verzeichnis existiert
+        $cache_dir = dirname($cache_file);
+        if (!is_dir($cache_dir)) {
+            mkdir($cache_dir, 0755, true);
+        }
+        
+        $cache_data = [
+            'timestamp' => time(),
+            'data' => $data
+        ];
+        
+        file_put_contents($cache_file, serialize($cache_data));
+    }
+    
+    /**
+     * Generiert den Cache-Dateipfad für einen Schlüssel
+     */
+    private function getCacheFilePath($key)
+    {
+        $cache_dir = rex_path::addonCache('statistics');
+        return $cache_dir . md5($key) . '.cache';
+    }
+    
+    /**
+     * Generiert einen eindeutigen Cache-Schlüssel basierend auf Methode und Parametern
+     */
+    private function generateCacheKey($method, $params = [])
+    {
+        return 'chartdata_' . $method . '_' . md5(json_encode($params) . '_' . 
+               $this->filter_date_helper->date_start->format('Y-m-d') . '_' . 
+               $this->filter_date_helper->date_end->format('Y-m-d'));
+    }
 
     /**
      * 
@@ -66,21 +145,28 @@ class chartData
      */
     public function getMainChartData(): array
     {
+        $cache_key = $this->generateCacheKey('getMainChartData');
+        $cached_data = $this->getFromCache($cache_key);
+        
+        if ($cached_data !== null) {
+            return $cached_data;
+        }
+        
         $data_visits = $this->getVisitsPerDay();
-
         $data_visitors = $this->getVisitorsPerDay();
-
         $data_chart = array_merge($data_visits, $data_visitors);
-
         $xaxis_values = $this->getLabels();
-
         $legend_values = array_column($data_chart, 'name');
 
-        return [
+        $result = [
             'series' => $data_chart,
             'legend' => $legend_values,
             'xaxis' => $xaxis_values,
         ];
+        
+        $this->saveToCache($cache_key, $result);
+        
+        return $result;
     }
 
 
@@ -93,6 +179,13 @@ class chartData
      */
     private function getVisitsPerDay(): array
     {
+        $cache_key = $this->generateCacheKey('getVisitsPerDay');
+        $cached_data = $this->getFromCache($cache_key);
+        
+        if ($cached_data !== null) {
+            return $cached_data;
+        }
+        
         // DATA COLLECTION FOR MAIN CHART, "VIEWS PER DAY"
 
         // modify end date, because sql includes start and end, php ommits end
@@ -131,7 +224,7 @@ class chartData
 
         $data_chart_visits[] = [
             'data' => $values,
-            'name' => 'Aufrufe Gesamt',
+            'name' => $this->addon->i18n('statistics_visits_total'),
             'type' => 'line',
         ];
 
@@ -145,7 +238,6 @@ class chartData
                     $visits_per_day[$value->format("d.m.Y")] = "0";
                 }
 
-                $complete_dates_counts = [];
                 $date_counts = [];
 
                 if ($sql_data->getRows() != 0) {
@@ -158,14 +250,15 @@ class chartData
                 $values = array_values($visits_per_day);
 
                 $data_chart_visits[] = [
-                    // 'x' => $labels,
                     'data' => $values,
-                    'name' => 'Aufrufe ' . $domain['domain'],
+                    'name' => $this->addon->i18n('statistics_views_domain', $domain['domain']),
                     'type' => 'line',
                 ];
             }
         }
-
+        
+        $this->saveToCache($cache_key, $data_chart_visits);
+        
         return $data_chart_visits;
     }
 
@@ -179,6 +272,13 @@ class chartData
      */
     private function getVisitorsPerDay(): array
     {
+        $cache_key = $this->generateCacheKey('getVisitorsPerDay');
+        $cached_data = $this->getFromCache($cache_key);
+        
+        if ($cached_data !== null) {
+            return $cached_data;
+        }
+        
         // DATA COLLECTION FOR MAIN CHART, "VISITORS PER DAY"
 
         // modify end date, because sql includes start and end, php ommits end
@@ -203,7 +303,6 @@ class chartData
             $dates_array[$value->format("d.m.Y")] = "0";
         }
 
-        $complete_dates_counts = [];
         $date_counts = [];
 
         if ($sql_data->getRows() != 0) {
@@ -211,15 +310,15 @@ class chartData
                 $date = DateTime::createFromFormat('Y-m-d', $row->getValue('date'))->format('d.m.Y');
                 $date_counts[$date] = $row->getValue('count');
             }
-
-            $complete_dates_counts = array_merge($dates_array, $date_counts);
         }
+        
+        $complete_dates_counts = array_merge($dates_array, $date_counts);
 
         $values = array_values($complete_dates_counts);
 
         $data_chart_visitors[] = [
             'data' => $values,
-            'name' => 'Besucher Gesamt',
+            'name' => $this->addon->i18n('statistics_visitors_total'),
             'type' => 'line',
         ];
 
@@ -244,12 +343,13 @@ class chartData
 
                 $data_chart_visitors[] = [
                     'data' => $values,
-                    'name' => 'Besucher ' . $domain['domain'],
+                    'name' => $this->addon->i18n('statistics_visitors_domain', $domain['domain']),
                     'type' => 'line',
                 ];
             }
         }
-
+        
+        $this->saveToCache($cache_key, $data_chart_visitors);
         return $data_chart_visitors;
     }
 
@@ -263,6 +363,13 @@ class chartData
      */
     public function getHeatmapVisits(): array
     {
+        $cache_key = $this->generateCacheKey('getHeatmapVisits');
+        $cached_data = $this->getFromCache($cache_key);
+        
+        if ($cached_data !== null) {
+            return $cached_data;
+        }
+        
         // data for heatmap chart
 
         $sql = rex_sql::factory();
@@ -297,10 +404,13 @@ class chartData
             $max_value = max(array_values($heatmap_calendar));
         }
 
-        return [
+        $result = [
             'data' => $data_visits_heatmap_values,
             'max' => $max_value,
         ];
+        
+        $this->saveToCache($cache_key, $result);
+        return $result;
     }
 
 
@@ -313,6 +423,13 @@ class chartData
      */
     public function getChartDataMonthly(): array
     {
+        $cache_key = $this->generateCacheKey('getChartDataMonthly');
+        $cached_data = $this->getFromCache($cache_key);
+        
+        if ($cached_data !== null) {
+            return $cached_data;
+        }
+        
         $legend = [];
         $xaxis = [];
         $series = [];
@@ -346,9 +463,11 @@ class chartData
             $serie_data[$value->format("M Y")] = 0; // initialize each month with 0
         }
 
-        // get total visits
-        $result_total = $sql->getArray('SELECT DATE_FORMAT(date,"%b %Y") AS "month", IFNULL(SUM(count),0) AS "count" FROM ' . rex::getTable('pagestats_visits_per_day') . ' GROUP BY month ORDER BY date ASC');
-
+        // get total visits - das war:
+        // $result_total = $sql->getArray('SELECT DATE_FORMAT(date,"%b %Y") AS "month", IFNULL(SUM(count),0) AS "count" FROM ' . rex::getTable('pagestats_visits_per_day') . ' GROUP BY month ORDER BY date ASC');
+        
+        // Optimiert: Fügen Sie speziell den Monat hinzu, um die Gruppierung zu verbessern
+        $result_total = $sql->getArray('SELECT DATE_FORMAT(date,"%b %Y") AS "month", DATE_FORMAT(date,"%Y-%m") AS month_sort, IFNULL(SUM(count),0) AS "count" FROM ' . rex::getTable('pagestats_visits_per_day') . ' GROUP BY month_sort, month ORDER BY month_sort ASC');
 
         // set count to each month
         foreach ($result_total as $row) {
@@ -358,12 +477,12 @@ class chartData
         // combine data to series array for chart
         $serie = [
             'data' => array_values($serie_data),
-            'name' => 'Aufrufe Gesamt',
+            'name' => $this->addon->i18n('statistics_views_total'),
             'type' => 'line',
         ];
 
         // append to legend
-        $legend[] = 'Aufrufe Gesamt';
+        $legend[] = $this->addon->i18n('statistics_views_total');
 
         // add serie to series
         $series[] = $serie;
@@ -371,7 +490,7 @@ class chartData
         // do this procedure for each domain
         if ($this->addon->getConfig('statistics_combine_all_domains') == false) {
             foreach ($domains as $domain) {
-                $result_domain = $sql->getArray('SELECT DATE_FORMAT(date,"%b %Y") AS "month", IFNULL(SUM(count),0) AS "count" FROM ' . rex::getTable('pagestats_visits_per_day') . ' WHERE domain = :domain GROUP BY month ORDER BY date ASC', ['domain' => $domain['domain']]);
+                $result_domain = $sql->getArray('SELECT DATE_FORMAT(date,"%b %Y") AS "month", DATE_FORMAT(date,"%Y-%m") AS month_sort, IFNULL(SUM(count),0) AS "count" FROM ' . rex::getTable('pagestats_visits_per_day') . ' WHERE domain = :domain GROUP BY month_sort, month ORDER BY month_sort ASC', ['domain' => $domain['domain']]);
 
                 $serie_data = [];
                 foreach ($period as $value) {
@@ -384,22 +503,19 @@ class chartData
 
                 $serie = [
                     'data' => array_values($serie_data),
-                    'name' => 'Aufrufe ' . $domain['domain'],
+                    'name' => $this->addon->i18n('statistics_views_domain', $domain['domain']),
                     'type' => 'line',
                 ];
 
-                $legend[] = 'Aufrufe ' . $domain['domain'];
-
+                $legend[] = $this->addon->i18n('statistics_views_domain', $domain['domain']);
                 $series[] = $serie;
             }
         }
 
-
-
         // VISITORS
 
         // get total visits
-        $result_total = $sql->getArray('SELECT DATE_FORMAT(date,"%b %Y") AS "month", IFNULL(SUM(count),0) AS "count" FROM ' . rex::getTable('pagestats_visitors_per_day') . ' GROUP BY month ORDER BY date ASC');
+        $result_total = $sql->getArray('SELECT DATE_FORMAT(date,"%b %Y") AS "month", DATE_FORMAT(date,"%Y-%m") AS month_sort, IFNULL(SUM(count),0) AS "count" FROM ' . rex::getTable('pagestats_visitors_per_day') . ' GROUP BY month_sort, month ORDER BY month_sort ASC');
 
         $serie_data = [];
         foreach ($period as $value) {
@@ -414,12 +530,12 @@ class chartData
         // combine data to series array for chart
         $serie = [
             'data' => array_values($serie_data),
-            'name' => 'Besucher Gesamt',
+            'name' => $this->addon->i18n('statistics_visitors_total'),
             'type' => 'line',
         ];
 
         // append to legend
-        $legend[] = 'Besucher Gesamt';
+        $legend[] = $this->addon->i18n('statistics_visitors_total');
 
         // add serie to series
         $series[] = $serie;
@@ -427,7 +543,7 @@ class chartData
         // do this procedure for each domain
         if ($this->addon->getConfig('statistics_combine_all_domains') == false) {
             foreach ($domains as $domain) {
-                $result_domain = $sql->getArray('SELECT DATE_FORMAT(date,"%b %Y") AS "month", IFNULL(SUM(count),0) AS "count" FROM ' . rex::getTable('pagestats_visitors_per_day') . ' WHERE domain = :domain GROUP BY month ORDER BY date ASC', ['domain' => $domain['domain']]);
+                $result_domain = $sql->getArray('SELECT DATE_FORMAT(date,"%b %Y") AS "month", DATE_FORMAT(date,"%Y-%m") AS month_sort, IFNULL(SUM(count),0) AS "count" FROM ' . rex::getTable('pagestats_visitors_per_day') . ' WHERE domain = :domain GROUP BY month_sort, month ORDER BY month_sort ASC', ['domain' => $domain['domain']]);
 
                 $serie_data = [];
                 foreach ($period as $value) {
@@ -440,22 +556,23 @@ class chartData
 
                 $serie = [
                     'data' => array_values($serie_data),
-                    'name' => 'Besucher ' . $domain['domain'],
+                    'name' => $this->addon->i18n('statistics_visitors_domain', $domain['domain']),
                     'type' => 'line',
                 ];
 
-                $legend[] = 'Besucher ' . $domain['domain'];
-
+                $legend[] = $this->addon->i18n('statistics_visitors_domain', $domain['domain']);
                 $series[] = $serie;
             }
         }
 
-
-        return [
+        $result = [
             'series' => $series,
             'legend' => $legend,
             'xaxis' => $xaxis,
         ];
+        
+        $this->saveToCache($cache_key, $result);
+        return $result;
     }
 
 
@@ -468,7 +585,13 @@ class chartData
      */
     public function getChartDataYearly(): array
     {
-
+        $cache_key = $this->generateCacheKey('getChartDataYearly');
+        $cached_data = $this->getFromCache($cache_key);
+        
+        if ($cached_data !== null) {
+            return $cached_data;
+        }
+        
         $legend = [];
         $xaxis = [];
         $series = [];
@@ -511,12 +634,12 @@ class chartData
         // combine data to series array for chart
         $serie = [
             'data' => array_values($serie_data),
-            'name' => 'Aufrufe Gesamt',
+            'name' => $this->addon->i18n('statistics_views_total'),
             'type' => 'line',
         ];
 
         // append to legend
-        $legend[] = 'Aufrufe Gesamt';
+        $legend[] = $this->addon->i18n('statistics_views_total');
 
         // add serie to series
         $series[] = $serie;
@@ -537,17 +660,14 @@ class chartData
 
                 $serie = [
                     'data' => array_values($serie_data),
-                    'name' => 'Aufrufe ' . $domain['domain'],
+                    'name' => $this->addon->i18n('statistics_views_domain', $domain['domain']),
                     'type' => 'line',
                 ];
 
-                $legend[] = 'Aufrufe ' . $domain['domain'];
-
+                $legend[] = $this->addon->i18n('statistics_views_domain', $domain['domain']);
                 $series[] = $serie;
             }
         }
-
-
 
         // VISITORS
 
@@ -567,12 +687,12 @@ class chartData
         // combine data to series array for chart
         $serie = [
             'data' => array_values($serie_data),
-            'name' => 'Besucher Gesamt',
+            'name' => $this->addon->i18n('statistics_visitors_total'),
             'type' => 'line',
         ];
 
         // append to legend
-        $legend[] = 'Besucher Gesamt';
+        $legend[] = $this->addon->i18n('statistics_visitors_total');
 
         // add serie to series
         $series[] = $serie;
@@ -593,21 +713,38 @@ class chartData
 
                 $serie = [
                     'data' => array_values($serie_data),
-                    'name' => 'Besucher ' . $domain['domain'],
+                    'name' => $this->addon->i18n('statistics_visitors_domain', $domain['domain']),
                     'type' => 'line',
                 ];
 
-                $legend[] = 'Besucher ' . $domain['domain'];
-
+                $legend[] = $this->addon->i18n('statistics_visitors_domain', $domain['domain']);
                 $series[] = $serie;
             }
         }
 
-
-        return [
+        $result = [
             'series' => $series,
             'legend' => $legend,
             'xaxis' => $xaxis,
         ];
+        
+        $this->saveToCache($cache_key, $result);
+        return $result;
+    }
+    
+    /**
+     * Löscht den gesamten Cache
+     */
+    public static function clearCache()
+    {
+        $cache_dir = rex_path::addonCache('statistics');
+        if (is_dir($cache_dir)) {
+            $files = glob($cache_dir . '*.cache');
+            if ($files) {
+                foreach ($files as $file) {
+                    @unlink($file);
+                }
+            }
+        }
     }
 }

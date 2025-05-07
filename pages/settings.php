@@ -65,6 +65,37 @@ $form = rex_config_form::factory("statistics");
 
 $form->addFieldset("Allgemein");
 
+// Cache-Einstellungen am Anfang hinzufügen
+$form->addFieldset("Performance & Cache");
+
+$field_cache = $form->addRadioField('statistics_use_cache');
+$field_cache->setLabel('Statistik-Cache verwenden');
+$field_cache->addOption($addon->i18n('statistics_yes'), 1);
+$field_cache->addOption($addon->i18n('statistics_no'), 0);
+$field_cache->setNotice('Beschleunigt das Laden der Statistiken erheblich, besonders bei großen Datenmengen.');
+
+$field_cache_lifetime = $form->addTextField('statistics_cache_lifetime');
+$field_cache_lifetime->setLabel('Cache-Lebensdauer (in Sekunden)');
+$field_cache_lifetime->setAttribute('type', 'number');
+$field_cache_lifetime->setAttribute('min', '300'); // Minimum 5 Minuten
+$field_cache_lifetime->setNotice('Wie lange die Statistikdaten im Cache vorgehalten werden sollen (Standard: 3600 = 1 Stunde).');
+$field_cache_lifetime->getValidator()->add('type', 'Bitte eine ganze Zahl eingeben.', 'int');
+
+$field_cleanup = $form->addRadioField('statistics_auto_cleanup');
+$field_cleanup->setLabel('Automatische Datensatzbereinigung');
+$field_cleanup->addOption($addon->i18n('statistics_yes'), 1);
+$field_cleanup->addOption($addon->i18n('statistics_no'), 0);
+$field_cleanup->setNotice('Alte Detaildaten werden automatisch bereinigt, um die Datenbank klein zu halten.');
+
+$field_cleanup_days = $form->addTextField('statistics_cleanup_days');
+$field_cleanup_days->setLabel('Detaildaten aufbewahren (Tage)');
+$field_cleanup_days->setAttribute('type', 'number');
+$field_cleanup_days->setAttribute('min', '30'); // Minimum 30 Tage
+$field_cleanup_days->setNotice('Detaildaten älter als diese Anzahl Tage werden aggregiert und die Originaldaten gelöscht.');
+$field_cleanup_days->getValidator()->add('type', 'Bitte eine ganze Zahl eingeben.', 'int');
+
+$form->addFieldset("Allgemein");
+
 $field2 = $form->addTextField('statistics_visit_duration');
 $field2->setLabel($addon->i18n('statistics_visit_duration'));
 $field2->setNotice($addon->i18n('statistics_duration_note'));

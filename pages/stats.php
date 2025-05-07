@@ -181,31 +181,31 @@ $fragment->setVar('table', $hour->getList(), false);
 echo $fragment->parse('data_vertical.php');
 
 $fragment = new rex_fragment();
-$fragment->setVar('title', "Anzahl besuchter Seiten in einer Sitzung");
+$fragment->setVar('title', $addon->i18n('statistics_pagecount_session_title'));
 $fragment->setVar('chart', '<div id="chart_pagecount" style="width: 100%;height:500px"></div>', false);
 $fragment->setVar('table', $pagecount->getList(), false);
 $fragment->setVar('modalid', "pc_modal", false);
-$fragment->setVar('note', "<p>Zeigt an, wie viele Seiten in einer Sitzung besucht wurden.</p>", false);
+$fragment->setVar('note', $addon->i18n('statistics_pagecount_session_note'), false);
 echo $fragment->parse('data_vertical.php');
 
 $fragment = new rex_fragment();
-$fragment->setVar('title', "Besuchsdauer");
+$fragment->setVar('title', $addon->i18n('statistics_visitduration_title'));
 $fragment->setVar('chart', '<div id="chart_visitduration" style="width: 100%;height:500px"></div>', false);
 $fragment->setVar('table', $visitduration->getList(), false);
 $fragment->setVar('modalid', "bd_modal", false);
-$fragment->setVar('note', "<p>Zeigt an, wie viel Zeit auf der Webseite verbracht wurde. Ein Wert von genau '0 Sekunden' sagt aus, dass der Besucher nur eine einzige Seite besucht hat.</p> Hinweis: <p>Die Besuchsdauer wird nur annähernd genau erfasst. D.h. konkret, die Besuchszeit der letzten vom Besucher aufgerufenen Seite kann nicht erfasst werden. Die Zeit berechnet sich somit aus der Dauer aller Aufrufe ausgenommen des letzten.</p>", false);
+$fragment->setVar('note', $addon->i18n('statistics_visitduration_note'), false);
 echo $fragment->parse('data_vertical.php');
 
 $fragment = new rex_fragment();
-$fragment->setVar('title', "Ausstiegsseiten");
+$fragment->setVar('title', $addon->i18n('statistics_lastpage_title'));
 $fragment->setVar('chart', '<div id="chart_lastpage" style="width: 100%;height:500px"></div>', false);
 $fragment->setVar('table', $lastpage->getList(), false);
 $fragment->setVar('modalid', "lp_modal", false);
-$fragment->setVar('note', "<p>Zeigt an, welche URLs als letztes aufgerufen worden sind bevor die Webseite verlassen wurde.</p>", false);
+$fragment->setVar('note', $addon->i18n('statistics_lastpage_note'), false);
 echo $fragment->parse('data_vertical.php');
 
 $fragment = new rex_fragment();
-$fragment->setVar('title', "Länder");
+$fragment->setVar('title', $addon->i18n('statistics_countries_title'));
 $fragment->setVar('chart', '<div id="chart_country" style="width: 100%;height:500px"></div>', false);
 $fragment->setVar('table', $country->getList(), false);
 echo $fragment->parse('data_vertical.php');
@@ -226,7 +226,7 @@ if ($list->getRows() == 0) {
 }
 
 $fragment = new rex_fragment();
-$fragment->setVar('title', 'Bots:');
+$fragment->setVar('title', $addon->i18n('statistics_bots_title'));
 $fragment->setVar('body', $table, false);
 echo $fragment->parse('core/page/section.php');
 
@@ -405,7 +405,7 @@ echo $fragment->parse('core/page/section.php');
             show: true,
             formatter: function(p) {
                 var format = echarts.format.formatTime('dd.MM.yyyy', p.data[0]);
-                return format + '<br><b>' + p.data[1] + ' Aufrufe</b>';
+                return format + '<br><b>' + p.data[1] + ' ' + <?= json_encode($addon->i18n('statistics_heatmap_tooltip_visits')) ?> + '</b>';
             }
         },
         toolbox: {
@@ -434,15 +434,15 @@ echo $fragment->parse('core/page/section.php');
                 show: false
             },
             monthLabel: {
-                nameMap: [
-                    'Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
-                ],
+                nameMap: <?= json_encode([
+                    $addon->i18n('january_short'), $addon->i18n('february_short'), $addon->i18n('march_short'), $addon->i18n('april_short'), $addon->i18n('may_short'), $addon->i18n('june_short'),
+                    $addon->i18n('july_short'), $addon->i18n('august_short'), $addon->i18n('september_short'), $addon->i18n('october_short'), $addon->i18n('november_short'), $addon->i18n('december_short')
+                ]) ?>,
             },
             dayLabel: {
-                nameMap: [
-                    'So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'
-                ]
+                nameMap: <?= json_encode([
+                    $addon->i18n('sunday_short'), $addon->i18n('monday_short'), $addon->i18n('tuesday_short'), $addon->i18n('wednesday_short'), $addon->i18n('thursday_short'), $addon->i18n('friday_short'), $addon->i18n('saturday_short')
+                ]) ?>
             }
         },
         series: {
@@ -724,7 +724,7 @@ echo $fragment->parse('core/page/section.php');
         },
         xAxis: [{
             type: 'category',
-            data: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+            data: <?= json_encode([$addon->i18n('monday_short'), $addon->i18n('tuesday_short'), $addon->i18n('wednesday_short'), $addon->i18n('thursday_short'), $addon->i18n('friday_short'), $addon->i18n('saturday_short'), $addon->i18n('sunday_short')]) ?>,
             axisTick: {
                 alignWithLabel: true
             }
@@ -774,7 +774,7 @@ echo $fragment->parse('core/page/section.php');
         title: {},
         tooltip: {
             trigger: 'axis',
-            formatter: "{b} Uhr: <b>{c}</b>",
+            formatter: "{b} " + <?= json_encode($addon->i18n('statistics_hour_tooltip_suffix')) ?> + ": <b>{c}</b>",
             axisPointer: {
                 type: 'shadow'
             }
@@ -836,7 +836,7 @@ echo $fragment->parse('core/page/section.php');
         title: {},
         tooltip: {
             trigger: 'axis',
-            formatter: "{b} Seiten besucht: <b>{c} mal</b>",
+            formatter: "{b} " + <?= json_encode($addon->i18n('statistics_pagecount_tooltip_suffix')) ?> + ": <b>{c} " + <?= json_encode($addon->i18n('statistics_times_suffix')) ?> + "</b>",
             axisPointer: {
                 type: 'shadow'
             }
@@ -898,7 +898,7 @@ echo $fragment->parse('core/page/section.php');
         title: {},
         tooltip: {
             trigger: 'axis',
-            formatter: "{b} <br> <b>{c} mal</b>",
+            formatter: "{b} <br> <b>{c} " + <?= json_encode($addon->i18n('statistics_times_suffix')) ?> + "</b>",
             axisPointer: {
                 type: 'shadow'
             }
@@ -960,7 +960,7 @@ echo $fragment->parse('core/page/section.php');
         title: {},
         tooltip: {
             trigger: 'axis',
-            formatter: "{b} <br> Anzahl: <b>{c}</b>",
+            formatter: "{b} <br> " + <?= json_encode($addon->i18n('statistics_count_prefix')) ?> + ": <b>{c}</b>",
             axisPointer: {
                 type: 'shadow'
             }
@@ -1022,7 +1022,7 @@ echo $fragment->parse('core/page/section.php');
         title: {},
         tooltip: {
             trigger: 'axis',
-            formatter: "{b} <br> Anzahl: <b>{c}</b>",
+            formatter: "{b} <br> " + <?= json_encode($addon->i18n('statistics_count_prefix')) ?> + ": <b>{c}</b>",
             axisPointer: {
                 type: 'shadow'
             }
@@ -1108,21 +1108,21 @@ echo $fragment->parse('core/page/section.php');
                     echo '
                     language: {
                         "search": "_INPUT_",
-                        "searchPlaceholder": "Suchen",
-                        "decimal": ",",
-                        "info": "Einträge _START_-_END_ von _TOTAL_",
-                        "emptyTable": "Keine Daten",
-                        "infoEmpty": "0 von 0 Einträgen",
-                        "infoFiltered": "(von _MAX_ insgesamt)",
-                        "lengthMenu": "_MENU_ anzeigen",
-                        "loadingRecords": "Lade...",
-                        "zeroRecords": "Keine passenden Datensätze gefunden",
-                        "thousands": ".",
+                        "searchPlaceholder": "' . $addon->i18n('statistics_datatable_searchplaceholder') . '",
+                        "decimal": "' . $addon->i18n('statistics_datatable_decimal') . '",
+                        "info": "' . $addon->i18n('statistics_datatable_info') . '",
+                        "emptyTable": "' . $addon->i18n('statistics_datatable_emptytable') . '",
+                        "infoEmpty": "' . $addon->i18n('statistics_datatable_infoempty') . '",
+                        "infoFiltered": "' . $addon->i18n('statistics_datatable_infofiltered') . '",
+                        "lengthMenu": "' . $addon->i18n('statistics_datatable_lengthmenu') . '",
+                        "loadingRecords": "' . $addon->i18n('statistics_datatable_loadingrecords') . '",
+                        "zeroRecords": "' . $addon->i18n('statistics_datatable_zerorecords') . '",
+                        "thousands": "' . $addon->i18n('statistics_datatable_thousands') . '",
                         "paginate": {
-                            "first": "<<",
-                            "last": ">>",
-                            "next": ">",
-                            "previous": "<"
+                            "first": "' . $addon->i18n('statistics_datatable_paginate_first') . '",
+                            "last": "' . $addon->i18n('statistics_datatable_paginate_last') . '",
+                            "next": "' . $addon->i18n('statistics_datatable_paginate_next') . '",
+                            "previous": "' . $addon->i18n('statistics_datatable_paginate_previous') . '"
                         },
                     },
                     ';
@@ -1151,21 +1151,21 @@ echo $fragment->parse('core/page/section.php');
                     echo '
                     language: {
                         "search": "_INPUT_",
-                        "searchPlaceholder": "Suchen",
-                        "decimal": ",",
-                        "info": "Einträge _START_-_END_ von _TOTAL_",
-                        "emptyTable": "Keine Daten",
-                        "infoEmpty": "0 von 0 Einträgen",
-                        "infoFiltered": "(von _MAX_ insgesamt)",
-                        "lengthMenu": "_MENU_ anzeigen",
-                        "loadingRecords": "Lade...",
-                        "zeroRecords": "Keine passenden Datensätze gefunden",
-                        "thousands": ".",
+                        "searchPlaceholder": "' . $addon->i18n('statistics_datatable_searchplaceholder') . '",
+                        "decimal": "' . $addon->i18n('statistics_datatable_decimal') . '",
+                        "info": "' . $addon->i18n('statistics_datatable_info') . '",
+                        "emptyTable": "' . $addon->i18n('statistics_datatable_emptytable') . '",
+                        "infoEmpty": "' . $addon->i18n('statistics_datatable_infoempty') . '",
+                        "infoFiltered": "' . $addon->i18n('statistics_datatable_infofiltered') . '",
+                        "lengthMenu": "' . $addon->i18n('statistics_datatable_lengthmenu') . '",
+                        "loadingRecords": "' . $addon->i18n('statistics_datatable_loadingrecords') . '",
+                        "zeroRecords": "' . $addon->i18n('statistics_datatable_zerorecords') . '",
+                        "thousands": "' . $addon->i18n('statistics_datatable_thousands') . '",
                         "paginate": {
-                            "first": "<<",
-                            "last": ">>",
-                            "next": ">",
-                            "previous": "<"
+                            "first": "' . $addon->i18n('statistics_datatable_paginate_first') . '",
+                            "last": "' . $addon->i18n('statistics_datatable_paginate_last') . '",
+                            "next": "' . $addon->i18n('statistics_datatable_paginate_next') . '",
+                            "previous": "' . $addon->i18n('statistics_datatable_paginate_previous') . '"
                         },
                     },
                     ';
@@ -1191,21 +1191,21 @@ echo $fragment->parse('core/page/section.php');
                     echo '
                     language: {
                         "search": "_INPUT_",
-                        "searchPlaceholder": "Suchen",
-                        "decimal": ",",
-                        "info": "Einträge _START_-_END_ von _TOTAL_",
-                        "emptyTable": "Keine Daten",
-                        "infoEmpty": "0 von 0 Einträgen",
-                        "infoFiltered": "(von _MAX_ insgesamt)",
-                        "lengthMenu": "_MENU_ anzeigen",
-                        "loadingRecords": "Lade...",
-                        "zeroRecords": "Keine passenden Datensätze gefunden",
-                        "thousands": ".",
+                        "searchPlaceholder": "' . $addon->i18n('statistics_datatable_searchplaceholder') . '",
+                        "decimal": "' . $addon->i18n('statistics_datatable_decimal') . '",
+                        "info": "' . $addon->i18n('statistics_datatable_info') . '",
+                        "emptyTable": "' . $addon->i18n('statistics_datatable_emptytable') . '",
+                        "infoEmpty": "' . $addon->i18n('statistics_datatable_infoempty') . '",
+                        "infoFiltered": "' . $addon->i18n('statistics_datatable_infofiltered') . '",
+                        "lengthMenu": "' . $addon->i18n('statistics_datatable_lengthmenu') . '",
+                        "loadingRecords": "' . $addon->i18n('statistics_datatable_loadingrecords') . '",
+                        "zeroRecords": "' . $addon->i18n('statistics_datatable_zerorecords') . '",
+                        "thousands": "' . $addon->i18n('statistics_datatable_thousands') . '",
                         "paginate": {
-                            "first": "<<",
-                            "last": ">>",
-                            "next": ">",
-                            "previous": "<"
+                            "first": "' . $addon->i18n('statistics_datatable_paginate_first') . '",
+                            "last": "' . $addon->i18n('statistics_datatable_paginate_last') . '",
+                            "next": "' . $addon->i18n('statistics_datatable_paginate_next') . '",
+                            "previous": "' . $addon->i18n('statistics_datatable_paginate_previous') . '"
                         },
                     },
                     ';
@@ -1234,21 +1234,21 @@ echo $fragment->parse('core/page/section.php');
                     echo '
                     language: {
                         "search": "_INPUT_",
-                        "searchPlaceholder": "Suchen",
-                        "decimal": ",",
-                        "info": "Einträge _START_-_END_ von _TOTAL_",
-                        "emptyTable": "Keine Daten",
-                        "infoEmpty": "0 von 0 Einträgen",
-                        "infoFiltered": "(von _MAX_ insgesamt)",
-                        "lengthMenu": "_MENU_ anzeigen",
-                        "loadingRecords": "Lade...",
-                        "zeroRecords": "Keine passenden Datensätze gefunden",
-                        "thousands": ".",
+                        "searchPlaceholder": "' . $addon->i18n('statistics_datatable_searchplaceholder') . '",
+                        "decimal": "' . $addon->i18n('statistics_datatable_decimal') . '",
+                        "info": "' . $addon->i18n('statistics_datatable_info') . '",
+                        "emptyTable": "' . $addon->i18n('statistics_datatable_emptytable') . '",
+                        "infoEmpty": "' . $addon->i18n('statistics_datatable_infoempty') . '",
+                        "infoFiltered": "' . $addon->i18n('statistics_datatable_infofiltered') . '",
+                        "lengthMenu": "' . $addon->i18n('statistics_datatable_lengthmenu') . '",
+                        "loadingRecords": "' . $addon->i18n('statistics_datatable_loadingrecords') . '",
+                        "zeroRecords": "' . $addon->i18n('statistics_datatable_zerorecords') . '",
+                        "thousands": "' . $addon->i18n('statistics_datatable_thousands') . '",
                         "paginate": {
-                            "first": "<<",
-                            "last": ">>",
-                            "next": ">",
-                            "previous": "<"
+                            "first": "' . $addon->i18n('statistics_datatable_paginate_first') . '",
+                            "last": "' . $addon->i18n('statistics_datatable_paginate_last') . '",
+                            "next": "' . $addon->i18n('statistics_datatable_paginate_next') . '",
+                            "previous": "' . $addon->i18n('statistics_datatable_paginate_previous') . '"
                         },
                     },
                     ';

@@ -2,6 +2,7 @@
 ^Aether
 ^Amazon Simple Notification Service Agent$
 ^Amazon-Route53-Health-Check-Service
+^Amazon CloudFront
 ^b0t$
 ^bluefish 
 ^Calypso v\/
@@ -37,6 +38,7 @@
 ^pnpm\/
 ^RMA\/
 ^Ruby|Ruby\/[0-9]
+^symbolicator\/
 ^Swurl 
 ^TLS tester 
 ^twine\/
@@ -139,7 +141,6 @@ axios\/
 a\.pr-cy\.ru
 B-l-i-t-z-B-O-T
 Backlink-Ceck
-backlink-check
 BacklinkHttpStatus
 BackStreet
 BackupLand
@@ -148,6 +149,7 @@ Bad-Neighborhood
 Badass
 baidu\.com
 Bandit
+Barracuda Sentinel \(EE\)
 basicstate
 BatchFTP
 Battleztar Bazinga
@@ -188,7 +190,6 @@ Braintree-Webhooks
 Branch Metrics API
 Branch-Passthrough
 Brandprotect
-BrandVerity
 Brandwatch
 Brodie\/
 Browsershots
@@ -202,6 +203,7 @@ Burf Search
 Butterfly\/
 BuzzSumo
 CAAM\/[0-9]
+caam dot crwlr at gmail dot com
 CakePHP
 Calculon
 Canary%20Mail
@@ -355,6 +357,7 @@ Express WebPictures
 Extreme Picture Finder
 EyeNetIE
 ezooms
+facebookcatalog
 facebookexternalhit
 facebookexternalua
 facebookplatform
@@ -414,6 +417,7 @@ G-i-g-a-b-o-t
 g00g1e\.net
 ganarvisitas
 gdnplus\.com
+GeedoProductSearch
 geek-tools
 Genieo
 GentleSource
@@ -455,8 +459,7 @@ Google Page Speed Insights
 Google PP Default
 Google Search Console
 Google Web Preview
-Google-Ads-Creatives-Assistant
-Google-Ads-Overview
+Google-Ads
 Google-Adwords
 Google-Apps-Script
 Google-Calendar-Importer
@@ -476,6 +479,7 @@ google-xrawler
 Google-Youtube-Links
 GoogleDocs
 GoogleHC\/
+GoogleOther
 GoogleProber
 GoogleProducer
 GoogleSites
@@ -509,7 +513,6 @@ Hardenize
 Hatena
 Havij
 HaxerMen
-HeadlessChrome
 HEADMasterSEO
 HeartRails_Capture
 help@dataminr\.com
@@ -648,6 +651,7 @@ Kml-Google
 knows\.is
 KOCMOHABT
 kouio
+krawler\.dk
 kube-probe
 kubectl
 kulturarw3
@@ -672,6 +676,7 @@ limber\.io
 Link Valet
 LinkAlarm\/
 LinkAnalyser
+link-check
 linkCheck
 linkdex
 LinkExaminer
@@ -692,6 +697,7 @@ LongURL API
 longurl-r-package
 looid\.com
 looksystems\.net
+lscache_runner
 ltx71
 lua-resty-http
 Lucee \(CFML Engine\)
@@ -704,6 +710,7 @@ LYT\.SR
 L\.webis
 mabontland
 MacOutlook\/
+MagentaNews\/
 Mag-Net
 MagpieRSS
 Mail::STS
@@ -720,6 +727,7 @@ Mass Downloader
 masscan\/
 Mata Hari
 mattermost
+MatchorySearch\/
 Mediametric
 Mediapartners-Google
 mediawords
@@ -737,6 +745,7 @@ Microsoft Outlook
 Microsoft Windows Network Diagnostics
 Microsoft-WebDAV-MiniRedir
 Microsoft\.Data\.Mashup
+MicrosoftPreview
 MIDown tool
 MIIxpc
 Mindjet
@@ -757,6 +766,7 @@ monitis
 Monitority\/
 Monit\/
 montastic
+MonSpark
 MonTools
 Moreover
 Morfeus Fucking Scanner
@@ -780,6 +790,7 @@ NameFo\.com
 Nameprotect
 nationalarchives
 Navroad
+nbertaupete95
 NearSite
 Needle
 Nessus
@@ -934,6 +945,7 @@ Priceonomics Analysis Engine
 PrintFriendly
 PritTorrent
 Prlog
+probely\.com
 probethenet
 Project ?25499
 Project-Resonance
@@ -945,6 +957,7 @@ PRTG Network Monitor
 pshtt, https scanning
 PTST 
 PTST\/[0-9]+
+pulsetic\.com
 Pump
 Python-httplib2
 python-httpx
@@ -993,6 +1006,7 @@ ROI Hunter
 RPT-HTTPClient
 RSSMix\/
 RSSOwl
+RuxitSynthetic
 RyowlEngine
 safe-agent-scanner
 SalesIntelligent
@@ -1234,6 +1248,7 @@ Vagabondo
 VB Project
 vBSEO
 VCI
+Verity
 via ggpht\.com GoogleImageProxy
 Virusdie
 visionutils
@@ -1385,6 +1400,7 @@ YP\.PL
 Zabbix
 Zade
 Zao
+Zapier
 Zauba
 Zemanta Aggregator
 Zend\\Http\\Client
@@ -1398,4 +1414,4 @@ Zombie\.js
 Zoom\.Mac
 ZoteroTranslationServer
 ZyBorg
-[a-z0-9\-_]*(bot|crawl|archiver|transcoder|spider|uptime|validator|fetcher|cron|checker|reader|extractor|monitoring|analyzer|scraper)
+[a-z0-9\-_]*(bot|crawl|headless|archiver|transcoder|spider|uptime|validator|fetcher|cron|checker|reader|extractor|monitoring|analyzer|scraper)
