@@ -32,6 +32,20 @@ Diesen am besten auf 00:05 täglich einstellen.
 Dadurch werden alte, nicht länger benötigte Hashes automatisch gelöscht um Datensparsamkeit zu gewährleisten (löscht alle Hashes die älter sind als der aktuelle Tag).
 
 
+### Performance-Optimierungen:
+
+Ab Version 4.0.0 bietet das Addon mehrere Optimierungen für verbesserte Performance:
+
+- **Cache-System**: Statistikdaten werden zwischengespeichert, wodurch wiederholte Aufrufe der Statistiken deutlich beschleunigt werden
+- **Datenbank-Optimierung**: Automatische Bereinigung und Aggregation älterer Statistikdaten
+- **Konfigurierbare Einstellungen**: 
+  - Cache aktivieren/deaktivieren
+  - Cache-Lebensdauer anpassen (Standard: 3600 Sekunden)
+  - Aufbewahrungszeitraum für detaillierte Daten festlegen
+
+Diese Optimierungen verbessern besonders die Ladezeit beim ersten Aufruf und reduzieren die Datenbankgröße für langfristigen Betrieb mit vielen Besuchern.
+
+
 ### Medien-Tracking:
 Um Aufrufe von Medien (Bilder, Dokumente, etc.) zu loggen.
 Dieses kann auf zwei Arten verwendet werden:

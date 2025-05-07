@@ -262,6 +262,8 @@ class Visit
         $this->brand = trim($brandInfo) != '' ? ucfirst($brandInfo) : 'Undefiniert';
         $this->model = trim($modelInfo) != '' ? ucfirst($modelInfo) : 'Undefiniert';
 
+        // Optimiert: Modelldetails nur erfassen, wenn es sich um Mobile/Tablet handelt
+        $should_store_model = in_array(strtolower($this->device_type), ['smartphone', 'tablet', 'phablet']);
 
         $sql = rex_sql::factory();
 
@@ -269,21 +271,31 @@ class Visit
         ("browser","' . addslashes($this->browser) . '",1), 
         ("os","' . addslashes($this->os) . ' ' . addslashes($this->osVer) . '",1), 
         ("browsertype","' . addslashes($this->device_type) . '",1), 
-        ("brand","' . addslashes($this->brand) . '",1), 
-        ("model","' . addslashes($this->brand) . ' - ' . addslashes($this->model) . '",1),  
-        ("hour","' . $this->datetime_now->format('H') . '",1), 
+        ("brand","' . addslashes($this->brand) . '",1),';
+        
+        // Nur relevante Modelldetails erfassen
+        if ($should_store_model) {
+            $sql_insert .= ' ("model","' . addslashes($this->brand) . ' - ' . addslashes($this->model) . '",1),';
+        }
+        
+        $sql_insert .= ' ("hour","' . $this->datetime_now->format('H') . '",1), 
         ("weekday","' . $this->datetime_now->format('N') . '",1),
         ("country","' . $this->country . '",1)
         ON DUPLICATE KEY UPDATE count = count + 1;';
 
         $sql->setQuery($sql_insert);
 
-
         $sql_insert = 'INSERT INTO ' . rex::getTable('pagestats_visits_per_day') . ' (date,domain,count) VALUES 
         ("' . $this->datetime_now->format('Y-m-d') . '","' . addslashes($this->domain) . '",1)  
         ON DUPLICATE KEY UPDATE count = count + 1;';
 
         $sql->setQuery($sql_insert);
+        
+        // Cache leeren wenn notwendig
+        if ($this->datetime_now->format('H') == '00' && $this->datetime_now->format('i') < 15) {
+            // Nur in den ersten 15 Minuten nach Mitternacht, Cache löschen
+            \AndiLeni\Statistics\chartData::clearCache();
+        }
     }
 
 
@@ -304,12 +316,12 @@ class Visit
 
         $sql->setQuery($sql_insert);
 
-
-        // save url http status
-        $hash = md5($this->url);
-
-        $sql = rex_sql::factory();
-        $sql->setQuery("insert into " . rex::getTable("pagestats_urlstatus") . " (hash, url, status) values (:hash, :url, :status) on duplicate key update status = values(status);", [":hash" => $hash, ":url" => $this->url, ":status" => $this->httpStatus]);
+        // HTTP-Status nur erfassen, wenn es kein 200-Status ist (Fehler)
+        if ($this->httpStatus != '200') {
+            $hash = md5($this->url);
+            $sql = rex_sql::factory();
+            $sql->setQuery("INSERT INTO " . rex::getTable("pagestats_urlstatus") . " (hash, url, status) VALUES (:hash, :url, :status) ON DUPLICATE KEY UPDATE status = VALUES(status);", [":hash" => $hash, ":url" => $this->url, ":status" => $this->httpStatus]);
+        }
     }
 
 
@@ -542,5 +554,23 @@ class Visit
         }
 
         return $url;
+    }
+
+    /**
+     * Optimierte Methode um veraltete Hashes zu bereinigen
+     */
+    public static function cleanupHashTable(): void
+    {
+        $sql = rex_sql::factory();
+        $addon = rex_addon::get('statistics');
+        $days = (int)$addon->getConfig('statistics_cleanup_days', 30);
+        
+        // Lösche alle Hash-Einträge, die älter als die konfigurierten Tage sind
+        $cutoff_date = new \DateTime();
+        $cutoff_date->modify("-{$days} days");
+        
+        $sql->setQuery("DELETE FROM " . rex::getTable('pagestats_hash') . " 
+                       WHERE datetime < :cutoff_date", 
+                       ['cutoff_date' => $cutoff_date->format('Y-m-d H:i:s')]);
     }
 }

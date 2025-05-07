@@ -1,5 +1,26 @@
 # Changelog
 
+## [4.0.0] - 07.05.2025
+
+### Performance-Optimierungen
+
+- Implementierung eines umfassenden Cache-Systems für Statistik-Charts und -Daten
+- Neue Konfigurationsoptionen für Cache-Einstellungen (Aktivierung/Deaktivierung und Cache-Lebensdauer)
+- Optimierte Datenbankabfragen mit neuen Indexen für schnellere Ausführung
+- Automatische Datenbereinigung und -aggregation für ältere Statistik-Daten
+- Reduzierung der gespeicherten HTTP-Status-Codes (nur Fehler werden gespeichert)
+- Selektivere Erfassung von Gerätemodell-Daten
+
+### Neue Features
+
+- Automatischer Datenbank-Cleanup-Cronjob für regelmäßige Optimierung
+- Verbesserter Hash-Cleanup-Cronjob für effizientere Datenbankgröße
+
+### Bugfixes
+
+- Behoben: Probleme mit langsamen Ladezeiten beim ersten Aufruf der Statistik
+- Behoben: Unnötige Speicherung von HTTP-200-Status-Codes
+
 ## [3.x.x] - xx.xx.xxxx
 
 -   set minimum Redaxo version to 5.12 / [[#124](https://github.com/AndiLeni/statistics/issues/124)]
