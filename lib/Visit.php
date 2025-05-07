@@ -169,6 +169,16 @@ class Visit
             return true;
         }
 
+        // Explizite Prüfung auf rex-api-call in URL oder Query-Parametern
+        if (strpos($this->url, 'rex-api-call') !== false) {
+            return true;
+        }
+        
+        // Auch in $_GET-Parametern suchen
+        if (isset($_GET['rex-api-call'])) {
+            return true;
+        }
+        
         // check own ignored ips
         if (trim($ignored_ips != '')) {
             $ignored_ips = explode("\n", str_replace("\r", "", $ignored_ips));
